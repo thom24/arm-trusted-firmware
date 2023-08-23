@@ -82,7 +82,9 @@
  * runtime memory used, choose the smallest value needed to register the
  * required regions for each BL stage.
  */
-#if USE_COHERENT_MEM
+#if USE_COHERENT_MEM && K3_LPM_DDR_SAVE_ADDRESS
+#define MAX_MMAP_REGIONS	12
+#elif USE_COHERENT_MEM || K3_LPM_DDR_SAVE_ADDRESS
 #define MAX_MMAP_REGIONS	11
 #else
 #define MAX_MMAP_REGIONS	10
