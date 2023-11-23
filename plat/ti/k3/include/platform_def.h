@@ -70,7 +70,11 @@
  * used, choose the smallest value needed to map the required virtual addresses
  * for each BL stage.
  */
+#if K3_LPM_DDR_SAVE_ADDRESS
+#define MAX_XLAT_TABLES		5
+#else
 #define MAX_XLAT_TABLES		4
+#endif
 
 /*
  * Defines the maximum number of regions that are allocated by the translation
@@ -83,8 +87,10 @@
  * required regions for each BL stage.
  */
 #if USE_COHERENT_MEM && K3_LPM_DDR_SAVE_ADDRESS
+#define MAX_MMAP_REGIONS	13
+#elif K3_LPM_DDR_SAVE_ADDRESS
 #define MAX_MMAP_REGIONS	12
-#elif USE_COHERENT_MEM || K3_LPM_DDR_SAVE_ADDRESS
+#elif USE_COHERENT_MEM
 #define MAX_MMAP_REGIONS	11
 #else
 #define MAX_MMAP_REGIONS	10
