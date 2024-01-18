@@ -22,6 +22,7 @@
 #define TI_SCI_MSG_WAKE_REASON		0x0003
 #define TI_SCI_MSG_GOODBYE		0x0004
 #define TI_SCI_MSG_SYS_RESET		0x0005
+#define TI_SCI_MSG_BOARD_CONFIG_PM	0x000e
 #define TI_SCI_MSG_QUERY_FW_CAPS	0x0022
 
 /* Device requests */
