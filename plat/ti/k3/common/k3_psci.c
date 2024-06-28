@@ -255,12 +255,13 @@ static void k3_pwr_domain_suspend(const psci_power_state_t *target_state)
 
 #if K3_LPM_DDR_SAVE_ADDRESS
 	/*
-	 * Save BL31 context.
+	 * Encrypt BL31 context.
 	 * No need to flush caches, sysfw will flush L2 after the last
 	 * core has been powered down.
 	 */
-	memcpy((void *)K3_LPM_DDR_SAVE_ADDRESS, (void *)k3_bl31_rw_start,
-	       (size_t)(k3_bl31_rw_end - k3_bl31_rw_start));
+	ti_sci_encrypt_tfa((uint64_t)k3_bl31_rw_start,
+			   (uint32_t)(k3_bl31_rw_end - k3_bl31_rw_start),
+			   K3_LPM_DDR_SAVE_ADDRESS);
 #endif
 
 	ti_sci_enter_sleep(proc_id, 0, k3_sec_entrypoint);

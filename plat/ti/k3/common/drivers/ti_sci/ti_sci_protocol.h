@@ -51,6 +51,10 @@
 #define TISCI_MSG_GET_PROC_BOOT_STATUS	0xc400
 #define TISCI_MSG_WAIT_PROC_BOOT_STATUS	0xc401
 
+/* TFA encrypt/decrypt messages */
+#define TISCI_MSG_SA2UL_AES_ENCRYPT	0x9040
+#define TISCI_MSG_SA2UL_AES_DECRYPT	0x9041
+
 /**
  * struct ti_sci_msg_hdr - Generic Message Header for All messages and responses
  * @type:	Type of messages: One of TI_SCI_MSG* values
@@ -743,6 +747,28 @@ struct ti_sci_msg_req_enter_sleep {
 	uint8_t processor_id;
 	uint32_t core_resume_lo;
 	uint32_t core_resume_hi;
+} __packed;
+
+
+/**
+ * struct ti_sci_msg_req_encrypt_tfa - Request for TISCI_MSG_SA2UL_AES_ENCRYPT.
+ *
+ * @hdr		    Generic Header
+ * @unencrypted_address: Address where the TFA lies unencrypted
+ * @unencrypted_len: Size of the TFA unencrypted
+ * @encrypted_address: Address where the encrypted TFA will be stored
+ *
+ * This message is to be sent when the system is going in suspend, just before
+ * TI_SCI_MSG_ENTER_SLEEP.
+ * The TIFS will then encrypt the TFA and store it in RAM.
+ * Upon resume, the SPL will ask TIFS to decrypt it back.
+ */
+/* TODO: API not yet defined */
+struct ti_sci_msg_req_encrypt_tfa {
+	struct ti_sci_msg_hdr hdr;
+	uint64_t unencrypted_address;
+	uint32_t unencrypted_len;
+	uint64_t encrypted_address;
 } __packed;
 
 #endif /* TI_SCI_PROTOCOL_H */

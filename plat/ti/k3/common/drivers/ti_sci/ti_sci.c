@@ -1694,6 +1694,45 @@ int ti_sci_enter_sleep(uint8_t proc_id,
 }
 
 /**
+ * ti_sci_encrypt_tfa - Ask TIFS to encrypt TFA at a specific address
+ *
+ * @unencrypted_address: Address where the TFA lies unencrypted
+ * @unencrypted_len: Size of the TFA unencrypted
+ * @encrypted_address: Address where the encrypted TFA will be stored
+ *
+ * Return: 0 if all goes well, else appropriate error message
+ */
+int ti_sci_encrypt_tfa(uint64_t unencrypted_address,
+		       uint32_t unencrypted_len,
+		       uint64_t encrypted_address)
+{
+	struct ti_sci_msg_req_encrypt_tfa req;
+	struct ti_sci_xfer xfer;
+	int ret;
+
+	ret = ti_sci_setup_one_xfer(TISCI_MSG_SA2UL_AES_ENCRYPT, 0,
+				    &req, sizeof(req),
+				    NULL, 0,
+				    &xfer);
+	if (ret != 0U) {
+		ERROR("Message alloc failed (%d)\n", ret);
+		return ret;
+	}
+
+	req.unencrypted_address = unencrypted_address;
+	req.unencrypted_len = unencrypted_len;
+	req.encrypted_address = encrypted_address;
+
+	ret = ti_sci_do_xfer(&xfer);
+	if (ret != 0U) {
+		ERROR("Transfer send failed (%d)\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+/**
  * ti_sci_init() - Basic initialization
  *
  * Return: 0 if all goes well, else appropriate error message
