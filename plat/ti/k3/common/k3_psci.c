@@ -261,7 +261,8 @@ static void k3_pwr_domain_suspend(const psci_power_state_t *target_state)
 	 */
 	ti_sci_encrypt_tfa((uint64_t)k3_bl31_rw_start,
 			   (uint32_t)(k3_bl31_rw_end - k3_bl31_rw_start),
-			   K3_LPM_DDR_SAVE_ADDRESS);
+			   K3_LPM_DDR_SAVE_ADDRESS,
+			   K3_LPM_DDR_SAVE_SIZE);
 #endif
 
 	ti_sci_enter_sleep(proc_id, 0, k3_sec_entrypoint);

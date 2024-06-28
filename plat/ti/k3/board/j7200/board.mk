@@ -17,3 +17,5 @@ USE_COHERENT_MEM	:=	1
 # context during suspend
 K3_LPM_DDR_SAVE_ADDRESS	?=	0x00000000
 $(eval $(call add_define,K3_LPM_DDR_SAVE_ADDRESS))
+K3_LPM_DDR_SAVE_SIZE	?=	0x1000000
+$(eval $(call add_define,K3_LPM_DDR_SAVE_SIZE))

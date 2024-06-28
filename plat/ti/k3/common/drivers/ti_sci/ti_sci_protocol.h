@@ -757,6 +757,7 @@ struct ti_sci_msg_req_enter_sleep {
  * @unencrypted_address: Address where the TFA lies unencrypted
  * @unencrypted_len: Size of the TFA unencrypted
  * @encrypted_address: Address where the encrypted TFA will be stored
+ * @max_encrypted_len: Size of DDR region reserved for encrypted TFA
  *
  * This message is to be sent when the system is going in suspend, just before
  * TI_SCI_MSG_ENTER_SLEEP.
@@ -769,6 +770,7 @@ struct ti_sci_msg_req_encrypt_tfa {
 	uint64_t unencrypted_address;
 	uint32_t unencrypted_len;
 	uint64_t encrypted_address;
+	uint32_t max_encrypted_len;
 } __packed;
 
 #endif /* TI_SCI_PROTOCOL_H */

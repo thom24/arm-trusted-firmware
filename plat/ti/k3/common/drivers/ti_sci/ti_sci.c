@@ -1699,12 +1699,14 @@ int ti_sci_enter_sleep(uint8_t proc_id,
  * @unencrypted_address: Address where the TFA lies unencrypted
  * @unencrypted_len: Size of the TFA unencrypted
  * @encrypted_address: Address where the encrypted TFA will be stored
+ * @max_encrypted_len: Size of DDR region reserved for encrypted TFA
  *
  * Return: 0 if all goes well, else appropriate error message
  */
 int ti_sci_encrypt_tfa(uint64_t unencrypted_address,
 		       uint32_t unencrypted_len,
-		       uint64_t encrypted_address)
+		       uint64_t encrypted_address,
+		       uint32_t max_encrypted_len)
 {
 	struct ti_sci_msg_req_encrypt_tfa req;
 	struct ti_sci_xfer xfer;
@@ -1722,6 +1724,7 @@ int ti_sci_encrypt_tfa(uint64_t unencrypted_address,
 	req.unencrypted_address = unencrypted_address;
 	req.unencrypted_len = unencrypted_len;
 	req.encrypted_address = encrypted_address;
+	req.max_encrypted_len = max_encrypted_len;
 
 	ret = ti_sci_do_xfer(&xfer);
 	if (ret != 0U) {

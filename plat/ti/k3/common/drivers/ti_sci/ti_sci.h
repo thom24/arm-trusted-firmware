@@ -221,6 +221,8 @@ int ti_sci_proc_wait_boot_status_no_wait(uint8_t proc_id,
  *		@unencrypted_len: Size of the TFA unencrypted
  *		@encrypted_address: Address where the encrypted TFA will be
  *				    stored
+ *		@max_encrypted_len: Size of DDR region reserved for encrypted
+ *				    TFA
  *
  * NOTE: for all these functions, the following are generic in nature:
  * Returns 0 for successful request, else returns corresponding error message.
@@ -231,7 +233,8 @@ int ti_sci_enter_sleep(uint8_t proc_id,
 
 int ti_sci_encrypt_tfa(uint64_t unencrypted_address,
 		       uint32_t unencrypted_len,
-		       uint64_t encrypted_address);
+		       uint64_t encrypted_address,
+		       uint32_t max_encrypted_len);
 
 /**
  * ti_sci_init() - Basic initialization
