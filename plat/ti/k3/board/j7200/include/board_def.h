@@ -20,14 +20,4 @@
 #define PLAT_CLUSTER_DEVICE_START_ID	U(3)
 #define PLAT_BOARD_DEVICE_ID		U(157)
 
-/*
- * Scratchpad RAM is only 512 bytes.
- * But it's not possible to map less than page size.
- */
-#define K3_MCU_SCRATCHPAD_BASE 0x40280000
-#define K3_MCU_SCRATCHPAD_SIZE 0x1000
-
-/* Magic value set by R5 SPL during a resume */
-#define K3_RESUME_MAGIC_VALUE 0xA5A5A5A5
-
 #endif /* BOARD_DEF_H */
