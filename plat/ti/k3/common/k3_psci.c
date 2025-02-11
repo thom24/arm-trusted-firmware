@@ -13,6 +13,7 @@
 #include <lib/psci/psci.h>
 #include <plat/common/platform.h>
 
+#include <common/bl_common.h>
 #include <ti_sci_protocol.h>
 #include <k3_gicv3.h>
 #include <ti_sci.h>
@@ -255,16 +256,23 @@ static void k3_pwr_domain_suspend(const psci_power_state_t *target_state)
 
 #if K3_LPM_DDR_SAVE_ADDRESS
 	/*
-	 * Save BL31 context.
+	 * Encrypt BL31 with its context.
 	 * No need to flush caches, sysfw will flush L2 after the last
 	 * core has been powered down.
 	 */
-	memcpy((void *)K3_LPM_DDR_SAVE_ADDRESS, (void *)k3_bl31_rw_start,
-	       (size_t)(k3_bl31_rw_end - k3_bl31_rw_start));
-#endif
 
-	ti_sci_enter_sleep(proc_id, 0, k3_sec_entrypoint);
+	ti_sci_encrypt_tfa((uint64_t)__TEXT_START__,
+			   BL31_SIZE,
+			   K3_LPM_DDR_SAVE_ADDRESS,
+			   K3_LPM_DDR_MAX_SAVE_SZ);
+#endif
+#define TISCI_MSG_VALUE_SLEEP_MODE_DEEP_SLEEP 0x0U
+#define TISCI_MSG_VALUE_SLEEP_MODE_SOC_OFF 0x5U
+	/* TIFS will save BL31 entrypoint and use it at resume */
+	ti_sci_enter_sleep(proc_id, TISCI_MSG_VALUE_SLEEP_MODE_SOC_OFF,
+			   k3_sec_entrypoint);
 }
+
 
 static void k3_pwr_domain_suspend_finish(const psci_power_state_t *target_state)
 {
