@@ -1727,6 +1727,17 @@ int ti_sci_encrypt_tfa(uint64_t unencrypted_address,
 	req.encrypted_address = encrypted_address;
 	req.max_encrypted_len = max_encrypted_len;
 
+/*	int i;
+	uint8_t val;
+	ERROR("START TO COPY DATA\n");
+	for (i = 0; i < 16; i++) {
+		val = *(uint8_t *)(unencrypted_address + i);
+		ERROR("GOT value 0x%x from addr 0x%08lx\n", val, unencrypted_address + i);
+		*(uint8_t *)(encrypted_address + i) = val;
+		ERROR("WRITE value 0x%x to addr 0x%08lx\n", val, encrypted_address + i);
+		ERROR("READ VALUE 0x%x at addr 0x%08lx\n", *(uint8_t *)(encrypted_address + i), encrypted_address + i);
+	}
+*/
 	ret = ti_sci_do_xfer(&xfer);
 	if (ret != 0U) {
 		ERROR("Transfer send failed (%d)\n", ret);
@@ -1735,6 +1746,44 @@ int ti_sci_encrypt_tfa(uint64_t unencrypted_address,
 
 	return 0;
 }
+
+/**
+ * ti_sci_decrypt_tfa() - Request for decrypting TFA at specific address.
+ * @unencrypted_address: Address where the unencrypted TFA will be restored
+ * @encrypted_address:	Address where the TFA lies unencrypted
+ *
+ * Return: 0 if all went well, else returns appropriate error value.
+ */
+int ti_sci_decrypt_tfa(uint64_t unencrypted_address,
+		       uint64_t encrypted_address)
+{
+	struct ti_sci_msg_decrypt_tfa_req req = { 0 };
+	struct ti_sci_msg_decrypt_tfa_resp resp = { 0 };
+	struct ti_sci_xfer xfer;
+	int ret = 0;
+
+	ret = ti_sci_setup_one_xfer(TISCI_MSG_LPM_DECRYPT, 0,
+				    &req, sizeof(req),
+				    &resp, sizeof(resp),
+				    &xfer);
+
+	if (ret != 0U) {
+		ERROR("Message alloc failed (%d)\n", ret);
+		return ret;
+	}
+
+	req.encrypted_address = encrypted_address;
+	req.unencrypted_address = unencrypted_address;
+
+	ret = ti_sci_do_xfer(&xfer);
+	if (ret != 0U) {
+		ERROR("Transfer send failed (%d)\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 
 /**
  * ti_sci_init() - Basic initialization

@@ -244,6 +244,7 @@ static int k3_validate_power_state(unsigned int power_state,
 static void k3_pwr_domain_suspend(const psci_power_state_t *target_state)
 {
 	unsigned int core, proc_id;
+	int ret;
 
 	core = plat_my_core_pos();
 	proc_id = PLAT_PROC_START_ID + core;
@@ -261,13 +262,88 @@ static void k3_pwr_domain_suspend(const psci_power_state_t *target_state)
 	 * core has been powered down.
 	 */
 
-	ti_sci_encrypt_tfa((uint64_t)__TEXT_START__,
-			   BL31_SIZE,
-			   K3_LPM_DDR_SAVE_ADDRESS,
-			   K3_LPM_DDR_MAX_SAVE_SZ);
+//	ERROR("ENCRYPT TFA: __TEXT_START__=0x%08lx BL31_SIZE=0x%08x, K3_LPM_DDR_SAVE_ADDRESS=0x%08x, K3_LPM_DDR_MAX_SAVE_SZ=0x%08x\n",
+//	      (uint64_t)__TEXT_START__, /*BL31_SIZE*/0xF800, K3_LPM_DDR_SAVE_ADDRESS, K3_LPM_DDR_MAX_SAVE_SZ);
+//	ret = ti_sci_encrypt_tfa((uint64_t)__TEXT_START__,
+//			   /*BL31_SIZE*/0xF800,
+//			   K3_LPM_DDR_SAVE_ADDRESS,
+//			   K3_LPM_DDR_MAX_SAVE_SZ);
+//	if (ret)
+//		ERROR("ENCRYPT TFA FAILED: %d\n", ret);
+
+	uint64_t addr, save_addr;
+	addr = (uint64_t) __TEXT_START__;
+	save_addr = K3_LPM_DDR_SAVE_ADDRESS;
+
+	ERROR("ENCRYPT TFA: START=0x%08lx SIZE=0x%08x DDR_SAVE_ADDRESS=0x%08lx DDR_MAX_SAVE_SZ=0x%08x\n",
+	     addr, 0x8000, save_addr, K3_LPM_DDR_MAX_SAVE_SZ);
+	ret = ti_sci_encrypt_tfa(addr,
+				 0x8000,
+				 save_addr,
+				 K3_LPM_DDR_MAX_SAVE_SZ);
+	if (ret)
+		ERROR("ENCRYPT TFA FAILED: %d\n", ret);
+
+	addr += 0x8000;
+	save_addr += 0x8000 + 0x1000;
+
+	ERROR("ENCRYPT TFA: START=0x%08lx SIZE=0x%08x DDR_SAVE_ADDRESS=0x%08lx DDR_MAX_SAVE_SZ=0x%08x\n",
+	      addr, 0x8000, save_addr, K3_LPM_DDR_MAX_SAVE_SZ);
+	ret = ti_sci_encrypt_tfa(addr,
+				 0x8000,
+				 save_addr,
+				 K3_LPM_DDR_MAX_SAVE_SZ);
+	if (ret)
+		ERROR("ENCRYPT TFA FAILED: %d\n", ret);
+
+	addr += 0x8000;
+	save_addr += 0x8000 + 0x1000;
+
+	ERROR("ENCRYPT TFA: START=0x%08lx SIZE=0x%08x DDR_SAVE_ADDRESS=0x%08lx DDR_MAX_SAVE_SZ=0x%08x\n",
+	      addr, 0x8000, save_addr, K3_LPM_DDR_MAX_SAVE_SZ);
+	ret = ti_sci_encrypt_tfa(addr,
+				 0x8000,
+				 save_addr,
+				 K3_LPM_DDR_MAX_SAVE_SZ);
+	if (ret)
+		ERROR("ENCRYPT TFA FAILED: %d\n", ret);
+
+	addr += 0x8000;
+	save_addr += 0x8000 + 0x1000;
+
+	ERROR("ENCRYPT TFA: START=0x%08lx SIZE=0x%08x DDR_SAVE_ADDRESS=0x%08lx DDR_MAX_SAVE_SZ=0x%08x\n",
+	      addr, 0x8000, save_addr, K3_LPM_DDR_MAX_SAVE_SZ);
+	ret = ti_sci_encrypt_tfa(addr,
+				 0x8000,
+				 save_addr,
+				 K3_LPM_DDR_MAX_SAVE_SZ);
+	if (ret)
+		ERROR("ENCRYPT TFA FAILED: %d\n", ret);
+
+/*
+	ERROR("DUMP 0x%08x\n", K3_LPM_DDR_SAVE_ADDRESS);
+	for (unsigned int i = 0; i < 100; i++)
+		ERROR("0x%08x: %x\n", K3_LPM_DDR_SAVE_ADDRESS + i,*(uint8_t *)((unsigned long)K3_LPM_DDR_SAVE_ADDRESS + i));
+*/
+/*	ERROR("DECRYPT TFA to 0x%08x\n", K3_LPM_DDR_SAVE_ADDRESS + 0x20000);
+	ret = ti_sci_decrypt_tfa(K3_LPM_DDR_SAVE_ADDRESS + 0x20000, K3_LPM_DDR_SAVE_ADDRESS);
+	if (ret) 
+		ERROR("FAILED TO DECRYPT TFA: %d\n", ret);
+
+	ERROR("DUMP TFA 0x%08lx\n", (uint64_t)__TEXT_START__);
+	for (unsigned int i = 0; i < 256; i++)
+		ERROR("0x%08lx: %x\n", (uint64_t)__TEXT_START__ + i, *(uint8_t *)((unsigned long)__TEXT_START__ + i));
+
+	ERROR("DUMP TFA DECRYPTED 0x%08x\n", K3_LPM_DDR_SAVE_ADDRESS + 0x20000);
+	for (unsigned i = 0; i < 256; i++)
+		ERROR("0x%08lx: %x\n", (uint64_t)K3_LPM_DDR_SAVE_ADDRESS + 0x20000 + i, *(uint8_t *)((unsigned long)K3_LPM_DDR_SAVE_ADDRESS + 0x20000 + i));
+*/
+
 #endif
 #define TISCI_MSG_VALUE_SLEEP_MODE_DEEP_SLEEP 0x0U
 #define TISCI_MSG_VALUE_SLEEP_MODE_SOC_OFF 0x5U
+
+	ERROR("k3_sec_entrypoint = 0x%08lx\n", k3_sec_entrypoint);
 	/* TIFS will save BL31 entrypoint and use it at resume */
 	ti_sci_enter_sleep(proc_id, TISCI_MSG_VALUE_SLEEP_MODE_SOC_OFF,
 			   k3_sec_entrypoint);
