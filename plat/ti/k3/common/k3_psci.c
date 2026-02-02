@@ -11,6 +11,8 @@
 #include <common/debug.h>
 #include <lib/el3_runtime/cpu_data.h>
 #include <lib/psci/psci.h>
+#include <lib/mmio.h>
+#include <lib/utils_def.h>
 #include <plat/common/platform.h>
 
 #include <ti_sci_protocol.h>
@@ -22,6 +24,7 @@
 #define SYSTEM_PWR_STATE(state) ((state)->pwr_domain_state[PLAT_MAX_PWR_LVL])
 
 uintptr_t k3_sec_entrypoint;
+bool encrypt_image;
 
 static void k3_cpu_standby(plat_local_state_t cpu_state)
 {
@@ -83,6 +86,27 @@ static int k3_pwr_domain_on(u_register_t mpidr)
 	return PSCI_E_SUCCESS;
 }
 
+uint32_t get_plat_cluster_start_id()
+{
+	static uint32_t cluster_id;
+	uint32_t part_id, jtag_id_reg;
+
+	if (cluster_id) {
+		return cluster_id;
+	}
+
+	jtag_id_reg = mmio_read_32(WKUP_CTRL_MMR0_BASE + JTAG_ID);
+	part_id = EXTRACT(JTAG_PART_ID, jtag_id_reg);
+
+	if ((part_id == J7200_PART_ID) || (part_id == J721E_PART_ID) || (part_id == J721S2_PART_ID)) {
+		cluster_id = J7_PLAT_CLUSTER_DEVICE_START_ID;
+	} else {
+		cluster_id = PLAT_CLUSTER_DEVICE_START_ID;
+	}
+
+	return cluster_id;
+}
+
 void k3_pwr_domain_off(const psci_power_state_t *target_state)
 {
 	int core, cluster, proc_id, device_id, cluster_id, ret;
@@ -97,7 +121,7 @@ void k3_pwr_domain_off(const psci_power_state_t *target_state)
 	cluster = MPIDR_AFFLVL1_VAL(read_mpidr_el1());
 	proc_id = PLAT_PROC_START_ID + core;
 	device_id = PLAT_PROC_DEVICE_START_ID + core;
-	cluster_id = PLAT_CLUSTER_DEVICE_START_ID + (cluster * 2);
+	cluster_id = get_plat_cluster_start_id() + (cluster * 2);
 
 	/*
 	 * If we are the last core in the cluster then we take a reference to
@@ -259,6 +283,11 @@ static void k3_pwr_domain_suspend_to_mode(const psci_power_state_t *target_state
 	k3_gic_cpuif_disable();
 	k3_gic_save_context();
 
+	if (encrypt_image)
+	{
+		ti_sci_encrypt_tfa((uint64_t)__TEXT_START__, BL31_SIZE);
+	}
+
 	k3_pwr_domain_off(target_state);
 
 	ti_sci_enter_sleep(proc_id, mode, k3_sec_entrypoint);
@@ -324,17 +353,24 @@ int plat_setup_psci_ops(uintptr_t sec_entrypoint,
 		ERROR("Unable to query firmware capabilities (%d)\n", ret);
 	}
 
-	/* If firmware does not support any known suspend mode */
-	if (!(fw_caps & (MSG_FLAG_CAPS_LPM_DEEP_SLEEP |
+	if (fw_caps & MSG_FLAG_CAPS_LPM_ENCRYPT_IMAGE) {
+		encrypt_image = true;
+	}
+
+	/* If firmware is capabale of low power modes */
+	if (fw_caps & (MSG_FLAG_CAPS_LPM_DM_MANAGED |
+			MSG_FLAG_CAPS_LPM_BOARDCFG_MANAGED)) {
+		k3_plat_psci_ops.pwr_domain_suspend = k3_pwr_domain_suspend_dm_managed;
+	} else if (!(fw_caps & (MSG_FLAG_CAPS_LPM_DEEP_SLEEP |
 			 MSG_FLAG_CAPS_LPM_MCU_ONLY |
 			 MSG_FLAG_CAPS_LPM_STANDBY |
 			 MSG_FLAG_CAPS_LPM_PARTIAL_IO))) {
-		/* Disable PSCI suspend support */
+		/* If firmware does not support any known suspend mode
+		 * disable PSCI suspend support
+		 */
 		k3_plat_psci_ops.pwr_domain_suspend = NULL;
 		k3_plat_psci_ops.pwr_domain_suspend_finish = NULL;
 		k3_plat_psci_ops.get_sys_suspend_power_state = NULL;
-	} else if (fw_caps & MSG_FLAG_CAPS_LPM_DM_MANAGED) {
-		k3_plat_psci_ops.pwr_domain_suspend = k3_pwr_domain_suspend_dm_managed;
 	}
 
 	*psci_ops = &k3_plat_psci_ops;
